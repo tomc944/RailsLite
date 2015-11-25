@@ -1,15 +1,14 @@
 require 'rack'
-require 'webrick'
 
-server = WEBrick::HTTPServer.new(:Port => 3000)
-
-server.mount_proc("/") do |request, response|
-  response.content_type = "text/text"
-  response.body = request.path
+app = Proc.new do |env|
+  req = Rack::Request.new(env)
+  res = Rack::Response.new
+  res['Content-Type'] = 'text/html'
+  res.write(req.path)
+  res.finish
 end
 
-trap('INT') do
-  server.shutdown
-end
-
-server.start
+Rack::Server.start(
+  app: app,
+  Port: 3000
+)
