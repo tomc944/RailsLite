@@ -25,6 +25,7 @@ class ControllerBase
   def redirect_to(url)
     raise 'wtf' if already_built_response?
     @already_built_response = true
+    @session.store_session(res)
     res.header['location'] = url
     res.status = 302
   end
@@ -36,6 +37,7 @@ class ControllerBase
     #debugger
     raise "wtf" if already_built_response?
     @already_built_response = true
+    @session.store_session(res)
     res.body = [content]
     res['Content-Type'] = content_type
   end
@@ -44,7 +46,8 @@ class ControllerBase
   # pass the rendered html to render_content
   def render(template_name)
     raise 'wft' if already_built_response?
-    template_file = "views/#{self.class.name.underscore}/#{template_name}.html.erb"
+    class_name = self.class.name
+    template_file = "views/#{class_name.underscore}/#{template_name}.html.erb"
     output_file = File.read(template_file)
     template = ERB.new("<%= output_file %>").result(binding)
     render_content(template, 'text/html')
@@ -52,6 +55,7 @@ class ControllerBase
 
   # method exposing a `Session` object
   def session
+    @session ||= Session.new(req)
   end
 
   # use this with the router to call action_name (:index, :show, :create...)
