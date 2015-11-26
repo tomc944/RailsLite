@@ -12,7 +12,7 @@ class ControllerBase
   def initialize(req, res, route_params = {})
     @req = req
     @res = res
-    @params = route_params
+    @params = route_params.merge(req.params)
     @already_built_response = false
   end
 
@@ -25,7 +25,7 @@ class ControllerBase
   def redirect_to(url)
     raise 'wtf' if already_built_response?
     @already_built_response = true
-    @session.store_session(res)
+    session.store_session(res)
     res.header['location'] = url
     res.status = 302
   end
@@ -37,7 +37,7 @@ class ControllerBase
     #debugger
     raise "wtf" if already_built_response?
     @already_built_response = true
-    @session.store_session(res)
+    session.store_session(res)
     res.body = [content]
     res['Content-Type'] = content_type
   end
@@ -49,7 +49,7 @@ class ControllerBase
     class_name = self.class.name
     template_file = "views/#{class_name.underscore}/#{template_name}.html.erb"
     output_file = File.read(template_file)
-    template = ERB.new("<%= output_file %>").result(binding)
+    template = ERB.new(output_file).result(binding)
     render_content(template, 'text/html')
   end
 
@@ -59,6 +59,7 @@ class ControllerBase
   end
 
   # use this with the router to call action_name (:index, :show, :create...)
-  def invoke_action(name)
+  def invoke_action(action_name)
+    self.send action_name
   end
 end
